@@ -2,6 +2,7 @@
 <html lang="fr"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Évaluation continue</title>
+<link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#2563eb"><link rel="icon" href="icon-192.png"><link rel="apple-touch-icon" href="icon-192.png">
 <style>
 :root{--bg:#f4f6f8;--card:#fff;--tx:#1b1f24;--mu:#667085;--ac:#1f6feb;--on:#fff;--bd:#d8dde3;--ok:#1a7f37;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
 @media(prefers-color-scheme:dark){:root:not([data-theme=light]){--bg:#101317;--card:#1a1f26;--tx:#e8ebef;--mu:#9aa4b2;--ac:#4c8dff;--on:#fff;--bd:#2c343e;--ok:#3fb950}}
@@ -32,7 +33,14 @@ h3 em{font-style:normal;color:var(--mu);font-weight:400;font-size:13px}
 .mu{color:var(--mu);font-size:13px}
 .nm{color:#d92d20;font-weight:700}@media(prefers-color-scheme:dark){:root:not([data-theme=light]) .nm{color:#ff6b6b}}:root[data-theme=dark] .nm{color:#ff6b6b}summary{cursor:pointer;font-weight:600}
 #pr{display:none}@page{margin:10mm}
-@media print{html,body{background:#fff!important;padding:0!important;margin:0}header,main,.bar{display:none!important}#pr{display:block}.pg{break-after:page;page-break-after:always;color:#000;background:#fff;font:12px/1.3 "Times New Roman",serif}.pg:last-child{break-after:auto;page-break-after:auto}.pg table{width:100%;border-collapse:collapse}.pg td,.pg th{border:1px solid #000;padding:4px;text-align:center}.pg td.l{text-align:left}.pg .sel{font-weight:700;background:#ccc}.pg h2,.pg h4{text-align:center;margin:8px 0}.pg .hd{display:flex;justify-content:space-between}}
+@media print{html,body{background:#fff!important;padding:0!important;margin:0}header,main,.bar{display:none!important}#pr{display:block}.pg{break-after:page;page-break-after:always;color:#000;background:#fff;font-size:10.5px;line-height:1.25}.pg:last-child{break-after:auto;page-break-after:auto}.pg table{width:100%;border-collapse:collapse}.pg td,.pg th{border:1px solid #000;padding:2px 3px;text-align:center}.pg td.l{text-align:left}.pg .sel{font-weight:700;background:#ccc}.pg h2,.pg h4{text-align:center;margin:8px 0}.pg .hd{display:flex;justify-content:space-between}}
+textarea{width:100%;min-height:60px;padding:10px;border:1px solid var(--bd);border-radius:10px;background:var(--bg);color:var(--tx);font:inherit}
+select{width:100%;padding:12px;border:1px solid var(--bd);border-radius:10px;background:var(--bg);color:var(--tx);font:inherit;margin-bottom:8px}
+input[type=color]{width:44px;height:44px;padding:2px;margin:0}
+.cr{display:flex;gap:10px;align-items:center;margin-bottom:6px}
+.sg{max-height:70px;max-width:100%;background:#fff;border-radius:6px;display:block;margin:6px 0}
+.enc{font-style:italic;color:var(--ok);margin:8px 0}.big{font-size:20px;font-weight:700;margin:12px 0 0}
+@media print{.pg *{-webkit-print-color-adjust:exact;print-color-adjust:exact}.pg h2{font-size:15px;margin:4px 0}.pg h4{color:#fff;padding:3px 8px;border-radius:4px;margin:6px 0 3px;text-align:left;font-size:12px}.pg th{background:color-mix(in srgb,var(--gc) 22%,#fff)}.pg .sel{font-weight:700;background:color-mix(in srgb,var(--gc) 35%,#fff)}.pg .nt{text-align:right}.pg .enc{color:#000;margin:6px 0}.ft{display:flex;justify-content:space-between;align-items:flex-end;margin-top:8px;gap:10px}.ft img{height:50px;mix-blend-mode:multiply}}
 </style></head>
 <body>
 <header><div id="h">Évaluation continue</div><small id="sync">…</small></header>
@@ -71,36 +79,28 @@ const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",
 const fmt=n=>(Math.round(n*100)/100).toString().replace(".",",");
 function score(s,g){let t=0;G[g].c.forEach((c,ci)=>{const v=c[1].map((_,ii)=>(s.p||{})[g+"_"+ci+"_"+ii]||0);t+=c[2]?Math.max(0,...v):v.reduce((a,b)=>a+b,0)});return t}
 function setSync(t){$("sync").textContent=t}
-function save(s){s.ts=Date.now();lsSet();if(!col||dest==="local"){setSync(dest==="cloud"?"⚠️ Cloud indisponible":"💾 Enregistré localement");return}clearTimeout(timer);timer=setTimeout(async()=>{timer=null;try{await col.doc(s.id).set({name:s.name,school:s.school,p:s.p||{},ts:Date.now()});setSync("☁️ Synchronisé")}catch(e){setSync("⚠️ Échec cloud")}},400);setSync("☁️ …")}
+function save(s){s.ts=Date.now();lsSet();if(!col||dest==="local"){setSync(dest==="cloud"?"⚠️ Cloud indisponible":"💾 Enregistré localement");return}clearTimeout(timer);timer=setTimeout(async()=>{timer=null;try{await col.doc(s.id).set({name:s.name,school:s.school,p:s.p||{},enc:s.enc||"",ts:Date.now()});setSync("☁️ Synchronisé")}catch(e){setSync("⚠️ Échec cloud")}},400);setSync("☁️ …")}
 let qs="",so=false;
 const nz=t=>String(t||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase();
 function listHtml(){const r=S.filter(s=>nz(s.name+" "+s.school).includes(nz(qs))).sort((a,b)=>a.name.localeCompare(b.name));return r.length?r.map(s=>`<div class="st" data-a="open" data-id="${esc(s.id)}"><b class="nm">${esc(s.name)}</b><span>${esc(s.school||"")} · Récit. ${fmt(score(s,0))}/5 · Lecture ${fmt(score(s,1))}/6 · Oral ${fmt(score(s,2))}/15 · <strong>Total ${fmt(tot(s))}/20</strong></span></div>`).join(""):`<p class="mu">${S.length?"Aucun résultat.":"Aucun apprenant pour l’instant."}</p>`}
 function setHtml(){return `<details id="sd" class="card" ${so?"open":""}><summary>⚙️ Enregistrement automatique</summary>${acctHtml()}<div class="lv" style="margin:10px 0">${[["local","💾 Téléphone"],["cloud","☁️ Cloud"],["both","Les deux"]].map(([v,t])=>`<button data-a="dest" data-v="${v}" class="${dest===v?"on":""}">${t}</button>`).join("")}</div><div class="row"><button data-a="export">📁 Enregistrer un fichier…</button><button data-a="import">📂 Importer</button></div><input type="file" id="imp" accept=".json,application/json" hidden></details>`}
-function pushAll(){lsSet();if(dest!=="local"&&col)S.forEach(x=>col.doc(x.id).set({name:x.name,school:x.school,p:x.p||{},ts:x.ts||Date.now()}).catch(()=>{}))}
+function pushAll(){lsSet();if(dest!=="local"&&col&&cfg.ts)col.doc("_cfg").set({j:JSON.stringify(cfg),ts:cfg.ts}).catch(()=>{});if(dest!=="local"&&col)S.forEach(x=>col.doc(x.id).set({name:x.name,school:x.school,p:x.p||{},enc:x.enc||"",ts:x.ts||Date.now()}).catch(()=>{}))}
 function exportF(){try{const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([JSON.stringify(S,null,1)],{type:"application/json"}));a.download="evaluation_continue_"+new Date().toISOString().slice(0,10)+".json";a.click();setSync("📁 Fichier enregistré")}catch(e){setSync("⚠️ Export impossible")}}
 const tot=s=>score(s,0)+score(s,2);
-function printTot(s){return `<div class="pg"><div class="hd"><b>CIRCONSCRIPTION THALA<br>POUR LA LANGUE FRANÇAISE</b><b style="text-align:right">Direction Régionale<br>de l’enseignement<br>de Kasserine</b></div><h2>Fiche d’évaluation continue (individuelle)</h2><p><b>Nom et prénom de l’apprenant</b> : <b style="color:#d00">${esc(s.name)}</b> &nbsp;&nbsp; <b>École</b> : ${esc(s.school||"……………")}</p><table><tr><th>Domaine</th><th>La note</th></tr><tr><td class="l">${esc(PT[0])}</td><td>${fmt(score(s,0))} / 5</td></tr><tr><td class="l">${esc(PT[2])}</td><td>${fmt(score(s,2))} / 15</td></tr><tr><td class="l"><b>Total (Récitation + Oral)</b></td><td><b>${fmt(tot(s))} / 20</b></td></tr></table></div>`}
-const pageAll=s=>[0,1,2].map(g=>printHtml(s,g)).join("")+printTot(s);
+const pageAll=s=>printPages(s);
 function printList(){return S.filter(s=>nz(s.name+" "+s.school).includes(nz(qs))).sort((a,b)=>a.name.localeCompare(b.name)).map(s=>pageAll(s)).join("")}
 function render(){
  const app=$("app"),bar=$("bar");
  if(!cur){bar.hidden=true;$("h").textContent="Évaluation continue";
-  app.innerHTML=`<div class="card"><input id="n" placeholder="Nom et prénom de l’apprenant"><input id="e" placeholder="École"><button class="p" data-a="add">Ajouter l’apprenant</button></div><input id="q" type="search" placeholder="🔍 Rechercher un élève…" value="${esc(qs)}"><button data-a="printall" style="width:100%;margin-bottom:8px">🖨️ Imprimer les grilles de tous les élèves</button><div id="lst">${listHtml()}</div>${setHtml()}`;
+  app.innerHTML=`${dip?'<button class="p" data-a="install" style="margin-bottom:10px">📲 Installer l’application</button>':""}<div class="card"><input id="n" placeholder="Nom et prénom de l’apprenant"><input id="e" placeholder="École"><button class="p" data-a="add">Ajouter l’apprenant</button></div><input id="q" type="search" placeholder="🔍 Rechercher un élève…" value="${esc(qs)}"><button data-a="printall" style="width:100%;margin-bottom:8px">🖨️ Imprimer les grilles de tous les élèves</button><div id="lst">${listHtml()}</div>${setHtml()}${apHtml()}`;
   return}
  const s=S.find(x=>x.id===cur);if(!s){cur=null;return render()}
  $("h").innerHTML='<span class="nm">'+esc(s.name)+'</span>';
- let h=`<div class="row" style="margin-bottom:10px;flex-wrap:wrap"><button data-a="back">← Liste</button><button data-a="print">🖨️ Cette fiche</button><button data-a="printstu">🖨️ Toutes les grilles</button><button data-a="clear">Tout décocher</button></div><div class="tabs">${G.map((g,i)=>`<button data-a="tab" data-i="${i}" class="${i===tab?"on":""}">${esc(g.t)}</button>`).join("")}<button data-a="tab" data-i="3" class="${tab===3?"on":""}">Total /20</button></div>`;
- (tab===3?[]:G[tab].c).forEach((c,ci)=>{h+=`<div class="card"><h3>${esc(c[0])}${c[2]?"<em>un seul indicateur</em>":""}</h3>`+c[1].map((ind,ii)=>{const k=tab+"_"+ci+"_"+ii,cv=(s.p||{})[k];return `<div class="ind"><p>${esc(ind[0])}</p><div class="lv">${ind[1].map(v=>`<button data-a="pick" data-k="${k}" data-v="${v}" class="${cv===v?"on":""}">${fmt(v)}</button>`).join("")}</div></div>`}).join("")+`</div>`});
- if(tab===3)h+=`<div class="card"><h3>Calcul total (Récitation + Oral)</h3><div class="ind"><div class="row"><span>${esc(G[0].t)}</span><b>${fmt(score(s,0))} / 5</b></div></div><div class="ind"><div class="row"><span>${esc(G[2].t)}</span><b>${fmt(score(s,2))} / 15</b></div></div></div>`;
- app.innerHTML=h;bar.hidden=false;bar.innerHTML=tab===3?`<span>Total : ${fmt(tot(s))} / 20</span><span class="mu">Récit. + Oral</span>`:`<span>La note : ${fmt(score(s,tab))} / ${G[tab].max}</span><span class="mu">${esc(G[tab].t)}</span>`}
+ let h=`<div class="row" style="margin-bottom:10px;flex-wrap:wrap"><button data-a="back">← Liste</button><button data-a="print">🖨️ Cette fiche</button><button data-a="printstu">🖨️ Toutes les grilles</button><button data-a="clear">Tout décocher</button></div><div class="tabs">${G.map((g,i)=>`<button data-a="tab" data-i="${i}" class="${i===tab?"on":""}" style="border-color:${cfg.colors[i]};${i===tab?"background:"+cfg.colors[i]:""}">${GI[i]} ${esc(g.t)}</button>`).join("")}<button data-a="tab" data-i="3" class="${tab===3?"on":""}" style="border-color:${cfg.colors[3]};${tab===3?"background:"+cfg.colors[3]:""}">➕ Total /20</button></div>`;
+ (tab===3?[]:G[tab].c).forEach((c,ci)=>{h+=`<div class="card" style="border-top:4px solid ${cfg.colors[tab]}"><h3>${esc(c[0])}${c[2]?"<em>un seul indicateur</em>":""}</h3>`+c[1].map((ind,ii)=>{const k=tab+"_"+ci+"_"+ii,cv=(s.p||{})[k];return `<div class="ind"><p>${esc(ind[0])}</p><div class="lv">${ind[1].map(v=>`<button data-a="pick" data-k="${k}" data-v="${v}" class="${cv===v?"on":""}">${fmt(v)}</button>`).join("")}</div></div>`}).join("")+`</div>`});
+ if(tab===3)h+=`<div class="card" style="border-top:4px solid ${cfg.colors[tab]}"><h3>Calcul total (Récitation + Oral)</h3><div class="ind"><div class="row"><span>${esc(G[0].t)}</span><b>${fmt(score(s,0))} / 5</b></div></div><div class="ind"><div class="row"><span>${esc(G[2].t)}</span><b>${fmt(score(s,2))} / 15</b></div></div><p class="big">Note globale : ${fmt(tot(s))} / 20</p><p id="encT" class="enc">${esc(enc(s))}</p><textarea id="encIn" placeholder="Remarque d’encouragement personnalisée (vide = automatique)">${esc(s.enc||"")}</textarea></div>`;
+ app.innerHTML=h;bar.hidden=false;bar.style.borderTop="4px solid "+cfg.colors[tab];bar.innerHTML=tab===3?`<span>Total : ${fmt(tot(s))} / 20</span><span class="mu">Récit. + Oral</span>`:`<span>La note : ${fmt(score(s,tab))} / ${G[tab].max}</span><span class="mu">${esc(G[tab].t)}</span>`}
 const PT=["Récitation / Chant / Comptine","Réception compréhension de l’écrit (Lecture vocale) — 5/6ème année, 6 pts","Réception compréhension et production de l’oral — 3/4/5/6ème"];
-function printHtml(s,gi){
- const sg=["−","+","++","+++"],g=G[gi];let r="";
- g.c.forEach((c,ci)=>c[1].forEach((ind,ii)=>{
-  const v=ind[1],n=v.length,sel=(s.p||{})[gi+"_"+ci+"_"+ii];
-  const cells=v.map((x,j)=>`<td colspan="${j===n-1?4-j:1}" class="${sel===x?"sel":""}">${sel===x?"✔ ":""}${fmt(x)}</td>`).join("");
-  r+=`<tr>${ii===0?`<td class="l" rowspan="${c[1].length}"><b>${esc(c[0])}</b></td>`:""}<td class="l">${esc(ind[0])}</td>${cells}</tr>`}));
- return `<div class="pg"><div class="hd"><b>CIRCONSCRIPTION THALA<br>POUR LA LANGUE FRANÇAISE</b><b style="text-align:right">Direction Régionale<br>de l’enseignement<br>de Kasserine</b></div><p><b>L’INSPECTEUR : M. MONCEF ZIDI</b><br><b>L’assistant pédagogique : M. Mohamed Mnasri</b></p><h2>Fiche d’évaluation continue (individuelle)</h2><p><b>Nom et prénom de l’apprenant</b> : <b style="color:#d00">${esc(s.name)}</b> &nbsp;&nbsp; <b>École</b> : ${esc(s.school||"……………")}</p><p><b>${esc(PT[gi])}</b></p><table><tr><th></th><th>Indicateurs associés</th><th colspan="4">Niveaux de maîtrise</th></tr><tr><th></th><th></th>${["A","B","C","D"].map((l,i)=>`<th>${l}<br>${sg[i]}</th>`).join("")}</tr>${r}<tr><td colspan="6" style="text-align:right"><b>La note : ${fmt(score(s,gi))} / ${g.max}</b></td></tr></table>${gi===2?"<p>Remarques : pour le C6, un seul indicateur est évalué (C6 = 1 point). Pour les autres critères, tous les indicateurs sont évalués.</p>":""}</div>`}
 document.addEventListener("click",e=>{
  const b=e.target.closest("[data-a]");if(!b)return;const a=b.dataset.a,s=S.find(x=>x.id===cur);
  if(a==="add"){const n=$("n").value.trim();if(!n)return;const o={id:"s"+Date.now(),name:n,school:$("e").value.trim(),p:{}};S.push(o);save(o);cur=o.id;tab=0}
@@ -111,6 +111,11 @@ document.addEventListener("click",e=>{
  else if(a==="login"||a==="signup"){fbAuth(a);return}
  else if(a==="logout"){fa&&fa.signOut();return}
  else if(a==="import"){$("imp").click();return}
+ else if(a==="cam"){$("sg1").click();return}
+ else if(a==="gal"){$("sg2").click();return}
+ else if(a==="nosg"){cfg.sign="";cfgSave();so2=true}
+ else if(a==="pre"){cfg.colors=PRE[b.dataset.k].slice();cfgSave();so2=true}
+ else if(a==="install"){if(dip){dip.prompt();dip=null}return}
  else if(a==="printstu"){$("pr").innerHTML=pageAll(s);window.print();return}
  else if(a==="printall"){const r=printList();if(!r)return;$("pr").innerHTML=r;window.print();return}
  else if(a==="print"){$("pr").innerHTML=tab===3?printTot(s):printHtml(s,tab);window.print();return}
@@ -120,15 +125,42 @@ document.addEventListener("click",e=>{
  render()});
 document.addEventListener("input",e=>{if(e.target.id==="q"){qs=e.target.value;$("lst").innerHTML=listHtml()}});
 document.addEventListener("toggle",e=>{if(e.target.id==="sd")so=e.target.open},true);
-document.addEventListener("change",async e=>{if(e.target.id!=="imp")return;try{const a=JSON.parse(await e.target.files[0].text()),m={};S.forEach(x=>m[x.id]=x);a.forEach(x=>{if(x&&x.id&&x.name&&(!m[x.id]||(x.ts||0)>(m[x.id].ts||0)))m[x.id]={id:String(x.id),name:String(x.name),school:String(x.school||""),ts:+x.ts||Date.now(),p:Object.fromEntries(Object.entries(x.p||{}).map(([k,v])=>[k,+v||0]))}});S=Object.values(m);pushAll();setSync("📂 Fichier importé")}catch(x){setSync("⚠️ Fichier invalide")}render()});
+document.addEventListener("change",async e=>{if(e.target.id!=="imp")return;try{const a=JSON.parse(await e.target.files[0].text()),m={};S.forEach(x=>m[x.id]=x);a.forEach(x=>{if(x&&x.id&&x.name&&(!m[x.id]||(x.ts||0)>(m[x.id].ts||0)))m[x.id]={id:String(x.id),name:String(x.name),school:String(x.school||""),enc:String(x.enc||""),ts:+x.ts||Date.now(),p:Object.fromEntries(Object.entries(x.p||{}).map(([k,v])=>[k,+v||0]))}});S=Object.values(m);pushAll();setSync("📂 Fichier importé")}catch(x){setSync("⚠️ Fichier invalide")}render()});
+
+const GI=["🎤","📖","🗣️","➕"];
+const FONTS=[["Système","system-ui,Arial,sans-serif"],["Arial","Arial,Helvetica,sans-serif"],["Times New Roman","'Times New Roman',Times,serif"],["Georgia","Georgia,serif"],["Verdana","Verdana,sans-serif"],["Trebuchet","'Trebuchet MS',sans-serif"],["Comic Sans","'Comic Sans MS',cursive"],["Courier","'Courier New',monospace"]];
+const PRE={"Classique":["#2563eb","#16a34a","#ea580c","#7c3aed"],"Océan":["#0369a1","#0891b2","#0d9488","#1e3a8a"],"Nature":["#15803d","#65a30d","#b45309","#166534"],"Rose":["#be185d","#db2777","#c026d3","#9d174d"]};
+const CK="ec_cfg",CD={font:FONTS[0][1],colors:PRE.Classique.slice(),teacher:"",sign:"",ts:0};
+let cfg,ct=null,so2=false,dip=null;
+try{cfg={...CD,...JSON.parse(localStorage.getItem(CK)||"{}")}}catch(e){cfg={...CD}}
+function cfgSave(){cfg.ts=Date.now();try{localStorage.setItem(CK,JSON.stringify(cfg))}catch(e){}document.body.style.fontFamily=cfg.font;clearTimeout(ct);ct=setTimeout(()=>{if(col&&dest!=="local")col.doc("_cfg").set({j:JSON.stringify(cfg),ts:cfg.ts}).catch(()=>{})},700)}
+const ENC=[[.9,"Excellent travail ! Félicitations, continue ainsi."],[.75,"Très bien ! Tes efforts portent leurs fruits."],[.6,"Bien ! Continue tes efforts."],[.5,"Assez bien. Encore un peu d’effort, tu peux y arriver !"],[0,"Courage ! Avec de l’entraînement, tu vas progresser."]];
+function enc(s){const m=(s.enc||"").trim();if(m)return m;const p=tot(s)/20;return ENC.find(x=>p>=x[0])[1]}
+function apHtml(){return `<details id="sd2" class="card" ${so2?"open":""}><summary>🎨 Apparence &amp; enseignant(e)</summary><div style="margin-top:10px"><input id="tn" placeholder="👩‍🏫 Nom de l’enseignant(e)" value="${esc(cfg.teacher)}"><div class="mu">✍️ Signature</div>${cfg.sign?`<img class="sg" src="${cfg.sign}">`:""}<div class="row" style="flex-wrap:wrap;margin:6px 0"><button data-a="cam">📷 Photo</button><button data-a="gal">🖼️ Image</button>${cfg.sign?'<button data-a="nosg">Supprimer</button>':""}</div><input type="file" id="sg1" accept="image/*" capture="environment" hidden><input type="file" id="sg2" accept="image/*" hidden><div class="mu" style="margin-top:8px">Police</div><select id="fs">${FONTS.map(f=>`<option value="${f[1]}" ${cfg.font===f[1]?"selected":""}>${f[0]}</option>`).join("")}</select><div class="mu">Thèmes</div><div class="row" style="flex-wrap:wrap;margin:6px 0">${Object.keys(PRE).map(k=>`<button data-a="pre" data-k="${k}">${k}</button>`).join("")}</div>${["Récitation","Lecture vocale","Oral","Total"].map((n,i)=>`<div class="cr"><input type="color" class="cc" data-i="${i}" value="${cfg.colors[i]}"><span>${GI[i]} ${n}</span></div>`).join("")}</div></details>`}
+function readSig(f){const r=new FileReader();r.onload=()=>{const im=new Image();im.onload=()=>{const k=Math.min(1,400/im.width),c=document.createElement("canvas");c.width=Math.round(im.width*k);c.height=Math.round(im.height*k);const x=c.getContext("2d");x.fillStyle="#fff";x.fillRect(0,0,c.width,c.height);x.drawImage(im,0,0,c.width,c.height);cfg.sign=c.toDataURL("image/jpeg",.8);so2=true;cfgSave();render()};im.src=r.result};r.readAsDataURL(f)}
+function hdr(s){return `<div class="hd"><b>CIRCONSCRIPTION THALA<br>POUR LA LANGUE FRANÇAISE</b><b style="text-align:right">Direction Régionale<br>de l’enseignement<br>de Kasserine</b></div><p style="margin:4px 0"><b>L’INSPECTEUR : M. MONCEF ZIDI</b> · <b>L’assistant pédagogique : M. Mohamed Mnasri</b></p><h2>Fiche d’évaluation continue (individuelle)</h2><p style="margin:4px 0"><b>Nom et prénom de l’apprenant</b> : <b style="color:#d00">${esc(s.name)}</b> &nbsp; <b>École</b> : ${esc(s.school||"……………")}</p>`}
+function gt(s,gi){const g=G[gi],c0=cfg.colors[gi],sg=["−","+","++","+++"];let r="";
+ g.c.forEach((c,ci)=>c[1].forEach((ind,ii)=>{const v=ind[1],n=v.length,sel=(s.p||{})[gi+"_"+ci+"_"+ii];const cells=v.map((x,j)=>`<td colspan="${j===n-1?4-j:1}" class="${sel===x?"sel":""}">${sel===x?"✔ ":""}${fmt(x)}</td>`).join("");r+=`<tr>${ii===0?`<td class="l" rowspan="${c[1].length}"><b>${esc(c[0])}</b></td>`:""}<td class="l">${esc(ind[0])}</td>${cells}</tr>`}));
+ return `<h4 style="background:${c0}">${GI[gi]} ${esc(PT[gi])}</h4><table style="--gc:${c0}"><tr><th></th><th>Indicateurs associés</th><th colspan="4">Niveaux de maîtrise</th></tr><tr><th></th><th></th>${["A","B","C","D"].map((l,i)=>`<th>${l}<br>${sg[i]}</th>`).join("")}</tr>${r}<tr><td colspan="6" class="nt"><b>La note : ${fmt(score(s,gi))} / ${g.max}</b></td></tr></table>`}
+function tb(s){const c3=cfg.colors[3];return `<h4 style="background:${c3}">➕ Note globale (Récitation + Oral)</h4><table style="--gc:${c3}"><tr><th>Domaine</th><th>La note</th></tr><tr><td class="l">${esc(PT[0])}</td><td>${fmt(score(s,0))} / 5</td></tr><tr><td class="l">${esc(PT[2])}</td><td>${fmt(score(s,2))} / 15</td></tr><tr><td class="l"><b>Total</b></td><td class="sel"><b>${fmt(tot(s))} / 20</b></td></tr></table><p class="enc"><i>${esc(enc(s))}</i></p>`}
+function ft(){return `<div class="ft"><div><b>L’enseignant(e)</b> : ${esc(cfg.teacher||"……………………")}</div><div><b>Signature</b> : ${cfg.sign?`<img src="${cfg.sign}">`:"……………"}</div></div>`}
+const pg=h=>`<div class="pg" style="font-family:${cfg.font}">${h}</div>`;
+function printHtml(s,gi){return pg(hdr(s)+gt(s,gi)+ft())}
+function printTot(s){return pg(hdr(s)+tb(s)+ft())}
+function printPages(s){return pg(hdr(s)+gt(s,0)+gt(s,1)+ft())+pg(hdr(s)+gt(s,2)+tb(s)+ft())}
+document.addEventListener("toggle",e=>{if(e.target.id==="sd2")so2=e.target.open},true);
+document.addEventListener("input",e=>{const t=e.target;if(t.id==="tn"){cfg.teacher=t.value;cfgSave()}else if(t.classList.contains("cc")){cfg.colors[+t.dataset.i]=t.value;cfgSave()}else if(t.id==="encIn"){const s=S.find(x=>x.id===cur);if(s){s.enc=t.value;save(s);$("encT").textContent=enc(s)}}});
+document.addEventListener("change",e=>{const t=e.target;if(t.id==="fs"){cfg.font=t.value;cfgSave()}else if((t.id==="sg1"||t.id==="sg2")&&t.files[0]){readSig(t.files[0]);t.value=""}});
+addEventListener("beforeinstallprompt",e=>{e.preventDefault();dip=e;if(!cur)render()});
+if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js").catch(()=>{});
 let fa=null,fs=null,fu=null,unsub=null;
 function acctHtml(){if(!fa)return `<p class="mu">☁️ Cloud non configuré : voir firebase-config.js.</p>`;
  return fu?`<div class="row" style="margin:10px 0"><span class="mu">Connecté : ${esc(fu.email||"")}</span><button data-a="logout">Se déconnecter</button></div>`:`<div style="margin:10px 0"><input id="em" type="email" placeholder="E-mail" autocomplete="username"><input id="pw" type="password" placeholder="Mot de passe (6 caractères min.)" autocomplete="current-password"><div class="row"><button data-a="login" class="p">Se connecter</button><button data-a="signup">Créer un compte</button></div></div>`}
 async function fbAuth(a){const e=$("em").value.trim(),p=$("pw").value;try{a==="signup"?await fa.createUserWithEmailAndPassword(e,p):await fa.signInWithEmailAndPassword(e,p)}catch(x){so=true;setSync("⚠️ "+String(x.code||"erreur").replace("auth/",""))}}
 function subscribe(){if(unsub){unsub();unsub=null}if(!fu){col=null;return}
  col=fs.collection("users/"+fu.uid+"/students");
- unsub=col.onSnapshot(q=>{if(timer||dest==="local")return;const m={},seen={};S.forEach(x=>m[x.id]=x);q.docs.forEach(d=>{const c={id:d.id,...d.data()};seen[c.id]=1;if(!m[c.id]||(c.ts||0)>=(m[c.id].ts||0))m[c.id]=c});S=Object.values(m);lsSet();S.forEach(x=>{if(!seen[x.id])col.doc(x.id).set({name:x.name,school:x.school,p:x.p||{},ts:x.ts||Date.now()}).catch(()=>{})});setSync(dest==="both"?"☁️ Synchronisé + local":"☁️ Synchronisé");render()},()=>setSync("⚠️ Cloud indisponible"))}
-(()=>{render();setSync(dest==="cloud"?"☁️ …":"💾 Local");
+ unsub=col.onSnapshot(q=>{if(timer||dest==="local")return;const m={},seen={};S.forEach(x=>m[x.id]=x);q.docs.forEach(d=>{if(d.id==="_cfg"){try{const k=d.data(),n=JSON.parse(k.j);if((k.ts||0)>(cfg.ts||0)){cfg={...CD,...n};try{localStorage.setItem(CK,JSON.stringify(cfg))}catch(e){}document.body.style.fontFamily=cfg.font}}catch(e){}return}const c={id:d.id,...d.data()};seen[c.id]=1;if(!m[c.id]||(c.ts||0)>=(m[c.id].ts||0))m[c.id]=c});S=Object.values(m);lsSet();S.forEach(x=>{if(!seen[x.id])col.doc(x.id).set({name:x.name,school:x.school,p:x.p||{},enc:x.enc||"",ts:x.ts||Date.now()}).catch(()=>{})});setSync(dest==="both"?"☁️ Synchronisé + local":"☁️ Synchronisé");render()},()=>setSync("⚠️ Cloud indisponible"))}
+(()=>{document.body.style.fontFamily=cfg.font;render();setSync(dest==="cloud"?"☁️ …":"💾 Local");
  try{if(typeof FBC!=="undefined"&&FBC.apiKey&&window.firebase){firebase.initializeApp(FBC);fa=firebase.auth();fs=firebase.firestore();fs.enablePersistence().catch(()=>{});
   fa.onAuthStateChanged(u=>{fu=u;subscribe();setSync(u?"☁️ Connecté":"💾 Local (non connecté)");render()})}}catch(e){setSync("⚠️ Firebase")}
 })();
