@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="fr"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Évaluation continue</title>
+<style>
+:root{--bg:#f4f6f8;--card:#fff;--tx:#1b1f24;--mu:#667085;--ac:#1f6feb;--on:#fff;--bd:#d8dde3;--ok:#1a7f37;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media(prefers-color-scheme:dark){:root:not([data-theme=light]){--bg:#101317;--card:#1a1f26;--tx:#e8ebef;--mu:#9aa4b2;--ac:#4c8dff;--on:#fff;--bd:#2c343e;--ok:#3fb950}}
+:root[data-theme=dark]{--bg:#101317;--card:#1a1f26;--tx:#e8ebef;--mu:#9aa4b2;--ac:#4c8dff;--on:#fff;--bd:#2c343e;--ok:#3fb950}
+*{box-sizing:border-box}html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--tx);font:16px/1.4 system-ui,-apple-system,Roboto,sans-serif;padding-bottom:90px}
+header{padding:14px 16px;font-weight:700;font-size:18px;display:flex;justify-content:space-between;align-items:center;gap:8px}
+header small{font-weight:400;color:var(--mu);font-size:12px}
+main{padding:0 12px;max-width:640px;margin:auto}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:12px;margin-bottom:12px}
+input{width:100%;padding:12px;border:1px solid var(--bd);border-radius:10px;background:var(--bg);color:var(--tx);font:inherit;margin-bottom:8px}
+button{font:inherit;color:var(--tx);background:var(--card);border:1px solid var(--bd);border-radius:10px;padding:10px 14px;cursor:pointer}
+button.p{background:var(--ac);color:var(--on);border-color:var(--ac);width:100%}
+.row{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.st{padding:12px;border:1px solid var(--bd);border-radius:12px;margin-bottom:8px;background:var(--card);cursor:pointer}
+.st b{display:block}.st span{color:var(--mu);font-size:13px}
+.tabs{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px}
+.tabs button{flex:1;min-width:45%;padding:8px 4px;font-size:13px}
+.tabs button.on{background:var(--ac);color:var(--on);border-color:var(--ac)}
+h3{margin:0 0 8px;font-size:15px;display:flex;justify-content:space-between}
+h3 em{font-style:normal;color:var(--mu);font-weight:400;font-size:13px}
+.ind{padding:8px 0;border-top:1px solid var(--bd)}
+.ind p{margin:0 0 8px;font-size:14px}
+.lv{display:flex;gap:6px}
+.lv button{flex:1;padding:12px 2px;font-weight:600;min-width:0}
+.lv button.on{background:var(--ok);border-color:var(--ok);color:#fff}
+.bar{position:fixed;left:0;right:0;bottom:0;background:var(--card);border-top:1px solid var(--bd);padding:12px 16px calc(12px + env(safe-area-inset-bottom,0px));display:flex;justify-content:space-between;align-items:center;font-size:20px;font-weight:700}
+.mu{color:var(--mu);font-size:13px}
+.nm{color:#d92d20;font-weight:700}@media(prefers-color-scheme:dark){:root:not([data-theme=light]) .nm{color:#ff6b6b}}:root[data-theme=dark] .nm{color:#ff6b6b}summary{cursor:pointer;font-weight:600}
+#pr{display:none}@page{margin:10mm}
+@media print{html,body{background:#fff!important;padding:0!important;margin:0}header,main,.bar{display:none!important}#pr{display:block}.pg{break-after:page;page-break-after:always;color:#000;background:#fff;font:12px/1.3 "Times New Roman",serif}.pg:last-child{break-after:auto;page-break-after:auto}.pg table{width:100%;border-collapse:collapse}.pg td,.pg th{border:1px solid #000;padding:4px;text-align:center}.pg td.l{text-align:left}.pg .sel{font-weight:700;background:#ccc}.pg h2,.pg h4{text-align:center;margin:8px 0}.pg .hd{display:flex;justify-content:space-between}}
+</style></head>
+<body>
+<header><div id="h">Évaluation continue</div><small id="sync">…</small></header>
+<main id="app"></main>
+<div class="bar" id="bar" hidden></div>
+<div id="pr"></div>
+<script src="firebase-config.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script>
+const L1=[0,.5,1,2],L2=[0,.25,.5],L4=[0,.25],L6=[0,.5,.75,1];
+const G=[
+{t:"Récitation / Chant",max:5,c:[
+["C1 Mémorisation",[["Dire le poème / le chant sans omission ni hésitation",L1]]],
+["C2 Compréhension",[["Donner le titre du poème / chant et le nom du poète / groupe / chanteur sans erreur",L2],["Répondre à une question et / ou réagir à une consigne pour manifester sa compréhension globale",L2]]],
+["C3 Interprétation",[["Prononcer, articuler correctement et bien placer les pauses",L2],["Respecter l’intonation correspondant à l’énoncé",L2],["Marquer les liaisons obligatoires et les enchaînements nécessaires",L2]]],
+["C4 Diction expressive",[["Réaliser une diction expressive reflétant le plaisir de dire",L4],["Adapter la voix et le corps à l’énoncé",L4]]]]},
+{t:"Lecture vocale",max:6,c:[
+["C1 Déchiffrage et qualité de la lecture vocale",[["Oraliser un énoncé écrit (syllabes, mots, textes)",L6],["Prononcer et articuler correctement le texte de façon à le rendre intelligible",L6],["Respecter la ponctuation forte (… ? !) et y faire correspondre le schéma intonatif adéquat",L6]]],
+["C5 Fluidité de la lecture",[["Lire rapidement à haute voix",L6],["Marquer les liaisons obligatoires",L6],["Lire de façon expressive",L6]]]]},
+{t:"Oral (compréhension / production)",max:15,c:[
+["C1 Adéquation avec la situation de communication (3 pts)",[["Manifester sa compréhension par la réalisation de la tâche demandée",L6],["Utiliser le vocabulaire approprié à la situation",L6],["Appliquer les règles sociales d’utilisation de la langue",L6]]],
+["C2 Correction phonétique (3 pts)",[["Prononcer et articuler correctement les phonèmes",L6],["Respecter l’intonation (déclaratif, interrogatif, exclamatif, impératif)",L6],["Réaliser les liaisons et les enchaînements obligatoires",L6]]],
+["C3 Correction linguistique (3 pts)",[["Agencer correctement les mots dans les phrases",L6],["Utiliser correctement les formes verbales étudiées",L6],["Se faire comprendre par un tiers",L6]]],
+["C4 Cohérence de l’énoncé (3 pts)",[["Utiliser les articulateurs temporels, les substituts étudiés",L6],["Émettre un avis personnel ou justifier un point",L6],["Respecter la chronologie des événements",L6]]],
+["C5 Originalité des idées (2 pts)",[["Faire preuve d’imagination, de créativité",L6],["Utiliser un vocabulaire riche, varié",L6]]],
+["C6 Fluidité de l’expression (1 pt)",[["S’exprimer avec aisance",L6],["Accompagner son énoncé d’une gestuelle appropriée",L6],["Adopter une attitude et un ton adaptés à la situation",L6]],true]]}
+];
+const LK="ec_students";let dest;try{dest=localStorage.getItem("ec_dest")||"both"}catch(e){dest="both"}
+function lsGet(){if(dest==="cloud")return[];try{return JSON.parse(localStorage.getItem(LK)||"[]")}catch(e){return[]}}
+function lsSet(){if(dest==="cloud")return;try{localStorage.setItem(LK,JSON.stringify(S))}catch(e){}}
+let S=lsGet(),cur=null,tab=0,col=null,timer=null;
+const $=id=>document.getElementById(id);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const fmt=n=>(Math.round(n*100)/100).toString().replace(".",",");
+function score(s,g){let t=0;G[g].c.forEach((c,ci)=>{const v=c[1].map((_,ii)=>(s.p||{})[g+"_"+ci+"_"+ii]||0);t+=c[2]?Math.max(0,...v):v.reduce((a,b)=>a+b,0)});return t}
+function setSync(t){$("sync").textContent=t}
+function save(s){s.ts=Date.now();lsSet();if(!col||dest==="local"){setSync(dest==="cloud"?"⚠️ Cloud indisponible":"💾 Enregistré localement");return}clearTimeout(timer);timer=setTimeout(async()=>{timer=null;try{await col.doc(s.id).set({name:s.name,school:s.school,p:s.p||{},ts:Date.now()});setSync("☁️ Synchronisé")}catch(e){setSync("⚠️ Échec cloud")}},400);setSync("☁️ …")}
+let qs="",so=false;
+const nz=t=>String(t||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase();
+function listHtml(){const r=S.filter(s=>nz(s.name+" "+s.school).includes(nz(qs))).sort((a,b)=>a.name.localeCompare(b.name));return r.length?r.map(s=>`<div class="st" data-a="open" data-id="${esc(s.id)}"><b class="nm">${esc(s.name)}</b><span>${esc(s.school||"")} · Récit. ${fmt(score(s,0))}/5 · Lecture ${fmt(score(s,1))}/6 · Oral ${fmt(score(s,2))}/15 · <strong>Total ${fmt(tot(s))}/20</strong></span></div>`).join(""):`<p class="mu">${S.length?"Aucun résultat.":"Aucun apprenant pour l’instant."}</p>`}
+function setHtml(){return `<details id="sd" class="card" ${so?"open":""}><summary>⚙️ Enregistrement automatique</summary>${acctHtml()}<div class="lv" style="margin:10px 0">${[["local","💾 Téléphone"],["cloud","☁️ Cloud"],["both","Les deux"]].map(([v,t])=>`<button data-a="dest" data-v="${v}" class="${dest===v?"on":""}">${t}</button>`).join("")}</div><div class="row"><button data-a="export">📁 Enregistrer un fichier…</button><button data-a="import">📂 Importer</button></div><input type="file" id="imp" accept=".json,application/json" hidden></details>`}
+function pushAll(){lsSet();if(dest!=="local"&&col)S.forEach(x=>col.doc(x.id).set({name:x.name,school:x.school,p:x.p||{},ts:x.ts||Date.now()}).catch(()=>{}))}
+function exportF(){try{const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([JSON.stringify(S,null,1)],{type:"application/json"}));a.download="evaluation_continue_"+new Date().toISOString().slice(0,10)+".json";a.click();setSync("📁 Fichier enregistré")}catch(e){setSync("⚠️ Export impossible")}}
+const tot=s=>score(s,0)+score(s,2);
+function printTot(s){return `<div class="pg"><div class="hd"><b>CIRCONSCRIPTION THALA<br>POUR LA LANGUE FRANÇAISE</b><b style="text-align:right">Direction Régionale<br>de l’enseignement<br>de Kasserine</b></div><h2>Fiche d’évaluation continue (individuelle)</h2><p><b>Nom et prénom de l’apprenant</b> : <b style="color:#d00">${esc(s.name)}</b> &nbsp;&nbsp; <b>École</b> : ${esc(s.school||"……………")}</p><table><tr><th>Domaine</th><th>La note</th></tr><tr><td class="l">${esc(PT[0])}</td><td>${fmt(score(s,0))} / 5</td></tr><tr><td class="l">${esc(PT[2])}</td><td>${fmt(score(s,2))} / 15</td></tr><tr><td class="l"><b>Total (Récitation + Oral)</b></td><td><b>${fmt(tot(s))} / 20</b></td></tr></table></div>`}
+const pageAll=s=>[0,1,2].map(g=>printHtml(s,g)).join("")+printTot(s);
+function printList(){return S.filter(s=>nz(s.name+" "+s.school).includes(nz(qs))).sort((a,b)=>a.name.localeCompare(b.name)).map(s=>pageAll(s)).join("")}
+function render(){
+ const app=$("app"),bar=$("bar");
+ if(!cur){bar.hidden=true;$("h").textContent="Évaluation continue";
+  app.innerHTML=`<div class="card"><input id="n" placeholder="Nom et prénom de l’apprenant"><input id="e" placeholder="École"><button class="p" data-a="add">Ajouter l’apprenant</button></div><input id="q" type="search" placeholder="🔍 Rechercher un élève…" value="${esc(qs)}"><button data-a="printall" style="width:100%;margin-bottom:8px">🖨️ Imprimer les grilles de tous les élèves</button><div id="lst">${listHtml()}</div>${setHtml()}`;
+  return}
+ const s=S.find(x=>x.id===cur);if(!s){cur=null;return render()}
+ $("h").innerHTML='<span class="nm">'+esc(s.name)+'</span>';
+ let h=`<div class="row" style="margin-bottom:10px;flex-wrap:wrap"><button data-a="back">← Liste</button><button data-a="print">🖨️ Cette fiche</button><button data-a="printstu">🖨️ Toutes les grilles</button><button data-a="clear">Tout décocher</button></div><div class="tabs">${G.map((g,i)=>`<button data-a="tab" data-i="${i}" class="${i===tab?"on":""}">${esc(g.t)}</button>`).join("")}<button data-a="tab" data-i="3" class="${tab===3?"on":""}">Total /20</button></div>`;
+ (tab===3?[]:G[tab].c).forEach((c,ci)=>{h+=`<div class="card"><h3>${esc(c[0])}${c[2]?"<em>un seul indicateur</em>":""}</h3>`+c[1].map((ind,ii)=>{const k=tab+"_"+ci+"_"+ii,cv=(s.p||{})[k];return `<div class="ind"><p>${esc(ind[0])}</p><div class="lv">${ind[1].map(v=>`<button data-a="pick" data-k="${k}" data-v="${v}" class="${cv===v?"on":""}">${fmt(v)}</button>`).join("")}</div></div>`}).join("")+`</div>`});
+ if(tab===3)h+=`<div class="card"><h3>Calcul total (Récitation + Oral)</h3><div class="ind"><div class="row"><span>${esc(G[0].t)}</span><b>${fmt(score(s,0))} / 5</b></div></div><div class="ind"><div class="row"><span>${esc(G[2].t)}</span><b>${fmt(score(s,2))} / 15</b></div></div></div>`;
+ app.innerHTML=h;bar.hidden=false;bar.innerHTML=tab===3?`<span>Total : ${fmt(tot(s))} / 20</span><span class="mu">Récit. + Oral</span>`:`<span>La note : ${fmt(score(s,tab))} / ${G[tab].max}</span><span class="mu">${esc(G[tab].t)}</span>`}
+const PT=["Récitation / Chant / Comptine","Réception compréhension de l’écrit (Lecture vocale) — 5/6ème année, 6 pts","Réception compréhension et production de l’oral — 3/4/5/6ème"];
+function printHtml(s,gi){
+ const sg=["−","+","++","+++"],g=G[gi];let r="";
+ g.c.forEach((c,ci)=>c[1].forEach((ind,ii)=>{
+  const v=ind[1],n=v.length,sel=(s.p||{})[gi+"_"+ci+"_"+ii];
+  const cells=v.map((x,j)=>`<td colspan="${j===n-1?4-j:1}" class="${sel===x?"sel":""}">${sel===x?"✔ ":""}${fmt(x)}</td>`).join("");
+  r+=`<tr>${ii===0?`<td class="l" rowspan="${c[1].length}"><b>${esc(c[0])}</b></td>`:""}<td class="l">${esc(ind[0])}</td>${cells}</tr>`}));
+ return `<div class="pg"><div class="hd"><b>CIRCONSCRIPTION THALA<br>POUR LA LANGUE FRANÇAISE</b><b style="text-align:right">Direction Régionale<br>de l’enseignement<br>de Kasserine</b></div><p><b>L’INSPECTEUR : M. MONCEF ZIDI</b><br><b>L’assistant pédagogique : M. Mohamed Mnasri</b></p><h2>Fiche d’évaluation continue (individuelle)</h2><p><b>Nom et prénom de l’apprenant</b> : <b style="color:#d00">${esc(s.name)}</b> &nbsp;&nbsp; <b>École</b> : ${esc(s.school||"……………")}</p><p><b>${esc(PT[gi])}</b></p><table><tr><th></th><th>Indicateurs associés</th><th colspan="4">Niveaux de maîtrise</th></tr><tr><th></th><th></th>${["A","B","C","D"].map((l,i)=>`<th>${l}<br>${sg[i]}</th>`).join("")}</tr>${r}<tr><td colspan="6" style="text-align:right"><b>La note : ${fmt(score(s,gi))} / ${g.max}</b></td></tr></table>${gi===2?"<p>Remarques : pour le C6, un seul indicateur est évalué (C6 = 1 point). Pour les autres critères, tous les indicateurs sont évalués.</p>":""}</div>`}
+document.addEventListener("click",e=>{
+ const b=e.target.closest("[data-a]");if(!b)return;const a=b.dataset.a,s=S.find(x=>x.id===cur);
+ if(a==="add"){const n=$("n").value.trim();if(!n)return;const o={id:"s"+Date.now(),name:n,school:$("e").value.trim(),p:{}};S.push(o);save(o);cur=o.id;tab=0}
+ else if(a==="open"){cur=b.dataset.id;tab=0}
+ else if(a==="back")cur=null;
+ else if(a==="dest"){dest=b.dataset.v;try{localStorage.setItem("ec_dest",dest)}catch(x){}pushAll();setSync(dest==="local"?"💾 Local":dest==="cloud"?"☁️ Cloud":"💾☁️ Local + cloud")}
+ else if(a==="export"){exportF();return}
+ else if(a==="login"||a==="signup"){fbAuth(a);return}
+ else if(a==="logout"){fa&&fa.signOut();return}
+ else if(a==="import"){$("imp").click();return}
+ else if(a==="printstu"){$("pr").innerHTML=pageAll(s);window.print();return}
+ else if(a==="printall"){const r=printList();if(!r)return;$("pr").innerHTML=r;window.print();return}
+ else if(a==="print"){$("pr").innerHTML=tab===3?printTot(s):printHtml(s,tab);window.print();return}
+ else if(a==="tab")tab=+b.dataset.i;
+ else if(a==="pick"){s.p=s.p||{};const v=+b.dataset.v;if(s.p[b.dataset.k]===v)delete s.p[b.dataset.k];else s.p[b.dataset.k]=v;save(s)}
+ else if(a==="clear"){Object.keys(s.p||{}).forEach(k=>{if(k.startsWith(tab+"_"))delete s.p[k]});save(s)}
+ render()});
+document.addEventListener("input",e=>{if(e.target.id==="q"){qs=e.target.value;$("lst").innerHTML=listHtml()}});
+document.addEventListener("toggle",e=>{if(e.target.id==="sd")so=e.target.open},true);
+document.addEventListener("change",async e=>{if(e.target.id!=="imp")return;try{const a=JSON.parse(await e.target.files[0].text()),m={};S.forEach(x=>m[x.id]=x);a.forEach(x=>{if(x&&x.id&&x.name&&(!m[x.id]||(x.ts||0)>(m[x.id].ts||0)))m[x.id]={id:String(x.id),name:String(x.name),school:String(x.school||""),ts:+x.ts||Date.now(),p:Object.fromEntries(Object.entries(x.p||{}).map(([k,v])=>[k,+v||0]))}});S=Object.values(m);pushAll();setSync("📂 Fichier importé")}catch(x){setSync("⚠️ Fichier invalide")}render()});
+let fa=null,fs=null,fu=null,unsub=null;
+function acctHtml(){if(!fa)return `<p class="mu">☁️ Cloud non configuré : voir firebase-config.js.</p>`;
+ return fu?`<div class="row" style="margin:10px 0"><span class="mu">Connecté : ${esc(fu.email||"")}</span><button data-a="logout">Se déconnecter</button></div>`:`<div style="margin:10px 0"><input id="em" type="email" placeholder="E-mail" autocomplete="username"><input id="pw" type="password" placeholder="Mot de passe (6 caractères min.)" autocomplete="current-password"><div class="row"><button data-a="login" class="p">Se connecter</button><button data-a="signup">Créer un compte</button></div></div>`}
+async function fbAuth(a){const e=$("em").value.trim(),p=$("pw").value;try{a==="signup"?await fa.createUserWithEmailAndPassword(e,p):await fa.signInWithEmailAndPassword(e,p)}catch(x){so=true;setSync("⚠️ "+String(x.code||"erreur").replace("auth/",""))}}
+function subscribe(){if(unsub){unsub();unsub=null}if(!fu){col=null;return}
+ col=fs.collection("users/"+fu.uid+"/students");
+ unsub=col.onSnapshot(q=>{if(timer||dest==="local")return;const m={},seen={};S.forEach(x=>m[x.id]=x);q.docs.forEach(d=>{const c={id:d.id,...d.data()};seen[c.id]=1;if(!m[c.id]||(c.ts||0)>=(m[c.id].ts||0))m[c.id]=c});S=Object.values(m);lsSet();S.forEach(x=>{if(!seen[x.id])col.doc(x.id).set({name:x.name,school:x.school,p:x.p||{},ts:x.ts||Date.now()}).catch(()=>{})});setSync(dest==="both"?"☁️ Synchronisé + local":"☁️ Synchronisé");render()},()=>setSync("⚠️ Cloud indisponible"))}
+(()=>{render();setSync(dest==="cloud"?"☁️ …":"💾 Local");
+ try{if(typeof FBC!=="undefined"&&FBC.apiKey&&window.firebase){firebase.initializeApp(FBC);fa=firebase.auth();fs=firebase.firestore();fs.enablePersistence().catch(()=>{});
+  fa.onAuthStateChanged(u=>{fu=u;subscribe();setSync(u?"☁️ Connecté":"💾 Local (non connecté)");render()})}}catch(e){setSync("⚠️ Firebase")}
+})();
+</script></body></html>
